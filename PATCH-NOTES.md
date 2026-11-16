@@ -19,5 +19,6 @@
 | `baad404` | `intro`（开场动画）默认关闭，迁移标记升到 `v2` | `src/shared/settings.ts` |
 | `4a30bb0` | `popup.js` 里的第三份默认值表同步（否则首次从弹窗写设置会用旧默认覆盖） | `src/popup/popup.ts`、`src/shared/settings.ts` |
 | `bc72193` | 动态页右下角「回到顶部」按钮（滚动 720px 后浮出，遵守 `reduceMotion`）；合集更新（`ugc_season`）从 `jump_url` 取 BV 后按视频块渲染，封面右上角补上「稍后再看」 | `src/content/feed.ts`、`src/content/dynamic*.ts`、`src/content/feed.css` |
+| `2b4851b` | 稍后再看浮窗：把「移出稍后再看」按钮从整行右上角挪到**封面右上角**并常显（半透明深色小胶囊，hover 变红），点击调 `/x/v2/history/toview/del` | `src/content/ui/drawer*.ts` / 对应的 `dw-x` 样式 |
 
 > 一次性迁移的标记存在页面 `localStorage` 里（`margin:defaults-off-v2`），所以每个 b 站子域第一次加载都会跑一次，之后手动打开这些开关不会被覆盖。
