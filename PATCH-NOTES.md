@@ -18,5 +18,6 @@
 | `0e560b0` | `footprint` / `weather` 默认关闭，并做一次性迁移；动态卡片「转发 / 评论 / 赞」改成统一药丸按钮（padding 8×12），点击区域从 11px 文字扩大到约 54×27 | `src/shared/settings.ts`、动态卡片与列表 CSS |
 | `baad404` | `intro`（开场动画）默认关闭，迁移标记升到 `v2` | `src/shared/settings.ts` |
 | `4a30bb0` | `popup.js` 里的第三份默认值表同步（否则首次从弹窗写设置会用旧默认覆盖） | `src/popup/popup.ts`、`src/shared/settings.ts` |
+| `bc72193` | 动态页右下角「回到顶部」按钮（滚动 720px 后浮出，遵守 `reduceMotion`）；合集更新（`ugc_season`）从 `jump_url` 取 BV 后按视频块渲染，封面右上角补上「稍后再看」 | `src/content/feed.ts`、`src/content/dynamic*.ts`、`src/content/feed.css` |
 
 > 一次性迁移的标记存在页面 `localStorage` 里（`margin:defaults-off-v2`），所以每个 b 站子域第一次加载都会跑一次，之后手动打开这些开关不会被覆盖。
