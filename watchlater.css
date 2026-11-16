@@ -1,0 +1,190 @@
+/* ============================================================================
+   MARGIN · 稍后再看（/watchlater/list）
+   ----------------------------------------------------------------------------
+   B 站原生在这个页面铺了两块 --bg1(#fff) 底板：
+     · 工具条那一条是满屏宽的（吸顶时更明显）
+     · 网格那一条是居中的，右侧还会空出一大片
+   在 MARGIN 的 canvas(#f5f4f1 + 背景纹理) 上，它们会切出一个硬边的白方块，
+   和周围画布完全不搭。这里把两块底板透明化，让卡片直接浮在画布上（和首页、
+   搜索页的 feed 一致），再把标题、工具条、卡片文字统一到 MARGIN 的排版与色板。
+
+   作用范围：只在 MARGIN 皮肤生效的 page 模式页面上生效
+   （html.margin-skin.margin-page 由 content.js 的 WatchSkin 添加），
+   关掉扩展 / 切回「原版」时这些规则自动失效。
+   ========================================================================== */
+
+/* 1. 白底板透明化 -------------------------------------------------------- */
+
+/* 1.1 已知的容器：工具条、网格、面包屑、列表头 */
+html.margin-page :is(
+  .watchlater-list,
+  .watchlater-list-nav,
+  .watchlater-list-container,
+  .watchlater-list-title,
+  .breadcrums-nav,
+  .list-header,
+  .list-header-extra
+) {
+  background-color: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  border-color: transparent !important;
+}
+
+/* 1.2 兜底：不管是哪一层 div 在白底，都沿着 #app 的祖先链一起透明化，
+       避免以后再改版时又冒出一块白 */
+html.margin-page :is(#app, #app > *, #app > * > *, #app > * > * > *):has(
+  :is(.watchlater-list, .watchlater-list-nav, .watchlater-list-container)
+) {
+  background-color: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+}
+
+/* 1.3 工具条吸顶时才补一层磨砂，避免列表从它下面穿过去 */
+html.margin-page .watchlater-list-nav.fixed,
+html.margin-page .watchlater-list-nav[class*="fixed"],
+html.margin-page .watchlater-list-nav[class*="sticky"] {
+  background-color: color-mix(in srgb, var(--m-canvas, #f5f4f1) 86%, transparent) !important;
+  backdrop-filter: blur(20px) saturate(1.4) !important;
+  border-bottom: 1px solid var(--m-line, rgb(23 24 26 / 9%)) !important;
+}
+
+/* 2. 标题区：衬线标题 + 等宽计数 ----------------------------------------- */
+html.margin-page .watchlater-list-title {
+  margin-bottom: 10px !important;
+}
+html.margin-page .watchlater-list-title-left {
+  color: var(--m-ink, #17181a) !important;
+  font-family: var(--m-serif, serif) !important;
+  font-size: 22px !important;
+  letter-spacing: 0.01em !important;
+}
+html.margin-page .watchlater-list-title__count {
+  color: var(--m-muted, #5f6167) !important;
+  font-family: var(--m-mono, ui-monospace) !important;
+  font-size: 12px !important;
+}
+
+/* 3. 工具条：去掉蓝色药丸与描边，改成 MARGIN 的幽灵按钮 ----------------- */
+html.margin-page .watchlater-list-nav .list-header {
+  gap: 6px !important;
+}
+html.margin-page .watchlater-list-nav .vui_button {
+  height: 32px !important;
+  padding: 0 14px !important;
+  border: 0 !important;
+  border-radius: 999px !important;
+  background: transparent !important;
+  color: var(--m-muted, #5f6167) !important;
+  font: 500 13px/32px var(--m-sans, system-ui) !important;
+  transition: background-color 0.18s, color 0.18s;
+}
+html.margin-page .watchlater-list-nav .vui_button :is(span, i, svg) {
+  color: inherit !important;
+  fill: currentColor !important;
+}
+html.margin-page .watchlater-list-nav .vui_button:hover {
+  background: var(--m-chip, rgb(23 24 26 / 5%)) !important;
+  color: var(--m-ink, #17181a) !important;
+}
+html.margin-page .watchlater-list-nav :is(
+  .vui_button--active,
+  .list-header-filter__btn.is-active,
+  button.active,
+  button[aria-selected="true"]
+) {
+  background: var(--m-ink, #17181a) !important;
+  color: var(--m-canvas, #f5f4f1) !important;
+}
+html.margin-page .watchlater-list-nav :is(
+  .vui_button--active,
+  .list-header-filter__btn.is-active,
+  button.active,
+  button[aria-selected="true"]
+) :is(span, i, svg) {
+  color: var(--m-canvas, #f5f4f1) !important;
+  fill: currentColor !important;
+}
+html.margin-page .watchlater-list-nav .list-header-filter__more {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+html.margin-page .watchlater-list-nav .list-header-filter__more::before {
+  display: none !important;
+}
+
+/* 3.1 搜索框：从灰底圆角块变成描边药丸 */
+html.margin-page .watchlater-list-nav .list-header-options .input-wrap,
+html.margin-page .watchlater-list-nav .list-header-options .search-bar {
+  border: 1px solid var(--m-line, rgb(23 24 26 / 9%)) !important;
+  border-radius: 999px !important;
+  background: color-mix(in srgb, var(--m-surface, #fff) 56%, transparent) !important;
+  box-shadow: none !important;
+}
+html.margin-page .watchlater-list-nav .search-bar-input::placeholder {
+  color: var(--m-faint, #66686d) !important;
+}
+
+/* 4. 卡片：封面圆角、标题/元信息走 ink & muted，悬停轻抬 ---------------- */
+html.margin-page .watchlater-list-container {
+  padding-top: 10px !important;
+  padding-bottom: 24px !important;
+}
+html.margin-page .watchlater-list-container .video-card {
+  background: transparent !important;
+  border-radius: 14px !important;
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+html.margin-page .watchlater-list-container .video-card:hover {
+  transform: translateY(-3px);
+}
+html.margin-page .watchlater-list-container .video-card :is(
+  .bili-video-card__cover,
+  .bili-video-card__image,
+  .bili-cover-card__thumbnail,
+  .bili-video-card__cover img,
+  .bili-video-card__image img
+) {
+  border-radius: 12px !important;
+}
+html.margin-page .watchlater-list-container .video-card :is(
+  .bili-video-card__title,
+  .bili-video-card__title a,
+  .video-card__title
+) {
+  color: var(--m-ink, #17181a) !important;
+  font: 500 14px/22px var(--m-sans, system-ui) !important;
+}
+html.margin-page .watchlater-list-container .video-card :is(
+  .bili-video-card__info--bottom,
+  .bili-video-card__info--author,
+  .bili-video-card__info--date,
+  .video-card__info
+) {
+  color: var(--m-muted, #5f6167) !important;
+  font-size: 12px !important;
+}
+html.margin-page .watchlater-list-container .video-card :is(
+  .bili-video-card__info--date,
+  .video-card__time
+) {
+  font-family: var(--m-mono, ui-monospace) !important;
+}
+
+/* 4.1 删除按钮：平时淡一点，悬停卡片时亮起来 */
+html.margin-page .watchlater-list-container .video-card__delete {
+  opacity: 0.45;
+  border-radius: 999px !important;
+  transition: opacity 0.2s, background-color 0.2s;
+}
+html.margin-page .watchlater-list-container .video-card:hover .video-card__delete {
+  opacity: 1;
+  background: var(--m-chip, rgb(23 24 26 / 5%)) !important;
+}
+
+/* 5. 收尾文案 ------------------------------------------------------------ */
+html.margin-page :is(.watchlater-list-empty, .watchlater-list-end) {
+  color: var(--m-faint, #66686d) !important;
+  font: 12px/1.6 var(--m-mono, ui-monospace) !important;
+}

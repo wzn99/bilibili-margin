@@ -43,6 +43,16 @@
     },
     {
       "matches": [
+        "https://www.bilibili.com/watchlater",
+        "https://www.bilibili.com/watchlater/*"
+      ],
+      "css": [
+        "watchlater.css"
+      ],
+      "run_at": "document_start"
+    },
+    {
+      "matches": [
         "https://www.bilibili.com/video/*",
         "https://www.bilibili.com/bangumi/play/*",
         "https://www.bilibili.com/list/*",
