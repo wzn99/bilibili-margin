@@ -23,5 +23,6 @@
 | `4e5cd58` | 顶栏「稍后」的**悬停浮窗**（`.dp` 面板，之前漏掉的才是这个）每行补上移除按钮：`.dp-x` 小胶囊落在封面右上角，点击删接口后该行淡出移除，失败短暂标红 | `src/content/ui/header-popover*.ts` / `.dp-*` 样式 |
 | `b061706` | 加入/移出稍后再看后派发 `margin:later-changed`；悬停浮窗收到事件后清掉 60 秒缓存并立即重新加载，不再需要整页刷新 | 同上的浮窗组件 + 稍后再看 API 封装 |
 | `06e0946` | 动态卡片的「转发 / 评论 / 赞」改成**图标 + 数字**（新增 `share` / `comment` / `thumb` 三个描边图标，24×24 stroke 1.7），已赞时拇指填充 18%；按钮统一 inline-flex，点击区域不变 | `src/content/icons.ts`、`src/content/ui/dynamic-card*.ts`、`src/content/ui/*.css` |
+| `35b4942` | 消息页「收到的赞」：从 `uri` 的 `#reply<rid>` 或 `native_uri` 的 `comment_root_id` 取评论 id，补 `comment_on=1&comment_root_id=...`，点开即定位到该评论楼层；点赞视频本身时链接不变 | `src/content/ui/message*.ts`（赞通知映射） |
 
 > 一次性迁移的标记存在页面 `localStorage` 里（`margin:defaults-off-v2`），所以每个 b 站子域第一次加载都会跑一次，之后手动打开这些开关不会被覆盖。
