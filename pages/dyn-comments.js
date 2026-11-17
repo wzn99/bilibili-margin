@@ -9,7 +9,7 @@
      新版 GET /x/v2/reply/wbi/main?type=&oid=&mode=3&pagination_str=...
    ========================================================================== */
 
-import { Pt as wbiGet } from './chunk-CddtFuE1.js';
+import { Pt as wbiGet, H as ICONS, X as svg } from './chunk-CddtFuE1.js';
 
 const API = 'https://api.bilibili.com';
 const MAX_ROWS = 6;
@@ -213,16 +213,26 @@ export function comments(item, fmt, ago) {
     link.target = '_blank';
     link.rel = 'noopener';
     link.title = '查看评论';
-    link.textContent = `评论 ${fmt(count)}`;
+    const num = document.createElement('span');
+    num.className = 'dy-n';
+    num.textContent = count ? fmt(count) : '';
+    num.hidden = !count;
+    link.append(svg(ICONS.comment), num);
+    link.setAttribute('aria-label', `评论${count ? ` ${fmt(count)}` : ''}`);
     return link;
   }
 
   const button = document.createElement('button');
   button.type = 'button';
   button.className = 'dy-act dy-cmt-btn';
-  button.textContent = `评论 ${fmt(count)}`;
+  const number = document.createElement('span');
+  number.className = 'dy-n';
+  number.textContent = count ? fmt(count) : '';
+  number.hidden = !count;
+  button.append(svg(ICONS.comment), number);
   button.setAttribute('aria-expanded', 'false');
   button.title = '展开评论';
+  button.setAttribute('aria-label', `展开评论${count ? ` ${fmt(count)}` : ''}`);
 
   let panel = null;
   let loading = false;

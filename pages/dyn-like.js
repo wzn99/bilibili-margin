@@ -8,6 +8,8 @@
    正文：{ dyn_id_str: 动态 id, up: 1 点赞 / 2 取消点赞 }
    ========================================================================== */
 
+import { H as ICONS, X as svg } from './chunk-CddtFuE1.js';
+
 const ENDPOINT = 'https://api.bilibili.com/x/dynamic/feed/dyn/thumb';
 
 const csrf = () => document.cookie.match(/(?:^|;\s*)bili_jct=([^;]+)/)?.[1] ?? '';
@@ -59,13 +61,19 @@ export function like(item, fmt) {
   const stat = item?.stat ?? {};
   const button = document.createElement('button');
   button.type = 'button';
-  button.className = 'dy-like';
+  button.className = 'dy-act dy-like';
   if (item?.id) button.dataset.dyn = String(item.id);
+
+  const number = document.createElement('span');
+  number.className = 'dy-n';
+  button.append(svg(ICONS.thumb), number);
 
   const render = (liked, count) => {
     button.setAttribute('aria-pressed', String(liked));
     button.title = liked ? '取消点赞' : '点赞这条动态';
-    button.textContent = `${liked ? '已赞' : '赞'} ${format(fmt, count)}`;
+    button.setAttribute('aria-label', `${liked ? '已赞' : '赞'}${count ? ` ${format(fmt, count)}` : ''}`);
+    number.textContent = count ? format(fmt, count) : '';
+    number.hidden = !count;
   };
   render(stat.liked === true, stat.like ?? 0);
 
