@@ -26,5 +26,6 @@
 | `35b4942` | 消息页「收到的赞」：从 `uri` 的 `#reply<rid>` 或 `native_uri` 的 `comment_root_id` 取评论 id，补 `comment_on=1&comment_root_id=...`，点开即定位到该评论楼层；点赞视频本身时链接不变（**取字段判断错，见下一条**） | `src/content/ui/message*.ts`（赞通知映射） |
 | `8b817d9` | 修正上一条：消息页赞通知里评论 id 其实在 **`item.item_id`**，`uri` 是裸视频地址、`native_uri` 里也没有；按 B 站消息页自身逻辑改成 `uri + "#reply" + item_id`（已带 `#` 就不重复拼），`回复我的` / `@ 我的` 同样用 `source_id` 拼。无头 Chrome 实测：`bili-comments` 会读到 `seek-id` 并把目标楼层滚进视野（含未展开的楼中楼）；只有 `?comment_on=1&comment_root_id=` 参数时 B 站完全忽略 | `src/content/ui/message*.ts`（赞 / 回复 / @ 通知映射） |
 | `02d5760` | UP 主空间「动态」页新增**搜索动态**和**按时间查找**：搜索框和日期框原来只在「视频」tab 显示，现在「动态」tab 也有一组（搜索框 + 日期选择 + 清除）。搜索按标题/正文/视频标题/专栏标题/合集标题/UP 名做本地过滤；有查询时自动往前翻页检索（每批最多 12 页、每页间隔 350ms，命中即停，接口报错即停，最多累计 60 页），顶栏右侧显示「命中 X / 已载 Y」，未翻完时可点「继续检索」再翻一批；日期框选某一天即只显示那天的动态，并自动翻到那一天（翻过之后显示「这天没有动态」）。筛选只用 `data-dyn-hide` 属性隐藏卡片，不重新请求 | `src/content/space*.ts`（空间页）、空间页样式 |
+| `595e6b6` | 直播页进入**全屏 / 宽屏**时隐藏顶部菜单栏（原来只有视频页会按 `data-screen` 隐藏，直播页没有 `.bpx-player-container`，播放器铺满窗口后顶栏一直压在最上层）。判断条件：直播页且（`body` 带 `player-full-win`，或播放器容器贴住视口顶部 `top∈[-6,8]` 且高度 ≥ 视口 40%）；退出全屏自动恢复。判断结果进缓存比较，并监听 `body` 的 class 变化 | `src/content/watch.ts`（`watchScreen`）、直播页皮肤 |
 
 > 一次性迁移的标记存在页面 `localStorage` 里（`margin:defaults-off-v2`），所以每个 b 站子域第一次加载都会跑一次，之后手动打开这些开关不会被覆盖。
