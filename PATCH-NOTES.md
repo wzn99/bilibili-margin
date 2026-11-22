@@ -3,7 +3,7 @@
 这个分支放的是**扩展的构建产物**（`dist`），不是源码。上游源码在 `jiuyang5354/bilibili-margin` 的 `main`，本 fork 的 `main` 也还是上游源码，没有被动过。
 
 - 基线：MARGIN **0.49.1** 的已构建扩展（`manifest.json` / `content.js` / `pages/**`）
-- 补丁：下表共 25 处，全部直接改在压缩后的产物里，**重新构建会被覆盖**
+- 补丁：下表共 27 处，全部直接改在压缩后的产物里，**重新构建会被覆盖**
 - 用法：Chrome / Edge「加载已解压的扩展程序」选这个目录即可
 
 ## 补丁清单
@@ -35,5 +35,7 @@
 | `f098794` | WebGPU 初始化**不再传 `powerPreference`**：`flux.js` 的 `pn()` 原来调 `navigator.gpu.requestAdapter({powerPreference})`，Chrome 在 Windows 上会打一条 “The powerPreference option is currently ignored…”（crbug 369219127）的告警，被当成页面错误弹出来。现在 `requestAdapter()` 不带参数（这个选项在 Windows 上本来就无效），`navigator.gpu` 缺失时给明确报错而不是 TypeError；适配器拿不到时 `start()` 照旧 catch 并退回 WebGL 版流光 | 背景引擎 `flux.js`（WebGPU 初始化） |
 | `028bb16` | 动态页「关注的人」那条横向 UP 主列表里，**第一个 UP 主的选中框（键盘焦点框）左边被裁掉**：`.fd-ups-row` 是横向滚动容器（`overflow-x:auto`，会裁掉溢出内容），而焦点框是画在元素外面的（`outline-offset:3px` + 2px 描边，即向外 5px），条带本身又没有任何内边距，所以第一个元素只剩右侧那条竖线、左下角被切掉；后面几个元素左侧有 6px 间距、不会超出容器，看起来就正常。给条带加 `padding:6px`、再用 `margin:-6px` 把元素位置补回（元素坐标一点没变），焦点框四边都完整了 | `src/content/feed*.css`（`.fd-ups-row`） |
 | `1e48a66` | 同一条带：滚到最右边时**去掉右侧渐隐**。条带原本用 `mask-image` 在右端做 8% 渐隐（提示右边还有内容），但这层渐隐也会盖住最后一个 UP 主的焦点框，和上面是同一种「框发虚 / 被切」。现在滚动时用 `data-end` 记下是否已经到底（内容不足一屏时也算到底），到底就把 mask 关掉；滚动、筛选、重新渲染后都会重算 | `src/content/feed*.ts`（关注条带的滚动处理）、`.fd-ups-row[data-end]` 样式 |
+| `b012496` | 动态卡片的**转发 / 评论 / 赞三个按钮放大**：图标 15→20px，内边距 8×12→10×14，数字 11→13px，点击区从 31px 高变成 40px 高（宽度也跟着变大），鼠标/手指更容易点中；`.dy-stat` 的左负边距同步从 -12px 改成 -14px，按钮仍和正文左对齐。空间页「动态」tab 用的是同一套卡片，一并变大 | `src/content/ui/*.css`（`.dy-like` / `.dy-act` / `.dy-cmt`）、`.dy-stat` |
+| `8763435` | **彻底移除「足迹热力图」**：首页的脚印卡片、设置里的「足迹热力图」开关、命令面板的「看足迹」、顶栏的「足迹」入口全部删掉；同时停掉支撑它的本机计时采集（`content.js` 原来每 15 秒往 `margin:activity` 记时长）和 background 的 `margin:'fp'` 读写，设置备份（导出/导入 JSON）只留设置、不再带 `activity`；`footprint` 从三份默认值表里删掉，`.fp-*` 样式一并清掉，首页版块顺序里的「足迹与天气」改叫「天气」。注意：设置里「顶栏入口」的「足迹」是 B 站自己的顶栏按钮，不是这个功能，保留 | `src/content/home*`、`src/content/settings*`、`src/shared/settings.ts`、`src/background/*`、`.fp-*` 样式 |
 
 > 一次性迁移的标记存在页面 `localStorage` 里（`margin:defaults-off-v2`），所以每个 b 站子域第一次加载都会跑一次，之后手动打开这些开关不会被覆盖。
