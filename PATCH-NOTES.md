@@ -3,7 +3,7 @@
 这个分支放的是**扩展的构建产物**（`dist`），不是源码。上游源码在 `jiuyang5354/bilibili-margin` 的 `main`，本 fork 的 `main` 也还是上游源码，没有被动过。
 
 - 基线：MARGIN **0.49.1** 的已构建扩展（`manifest.json` / `content.js` / `pages/**`）
-- 补丁：下表共 29 处，全部直接改在压缩后的产物里，**重新构建会被覆盖**
+- 补丁：下表共 30 处，全部直接改在压缩后的产物里，**重新构建会被覆盖**
 - 用法：Chrome / Edge「加载已解压的扩展程序」选这个目录即可
 
 ## 补丁清单
@@ -39,5 +39,6 @@
 | `8763435` | **彻底移除「足迹热力图」**：首页的脚印卡片、设置里的「足迹热力图」开关、命令面板的「看足迹」、顶栏的「足迹」入口全部删掉；同时停掉支撑它的本机计时采集（`content.js` 原来每 15 秒往 `margin:activity` 记时长）和 background 的 `margin:'fp'` 读写，设置备份（导出/导入 JSON）只留设置、不再带 `activity`；`footprint` 从三份默认值表里删掉，`.fp-*` 样式一并清掉，首页版块顺序里的「足迹与天气」改叫「天气」。注意：设置里「顶栏入口」的「足迹」是 B 站自己的顶栏按钮，不是这个功能，保留 | `src/content/home*`、`src/content/settings*`、`src/shared/settings.ts`、`src/background/*`、`.fp-*` 样式 |
 | `6b5f241` | 背景新增**「我的图片」图库**，随机背景可与内置样式混搭：设置 › 背景 › 我的图片里可多选上传、拖到区块里、或「从文件夹导入」（`webkitdirectory`，一次性扫描，不留文件夹句柄，避免每会话授权弹窗）；导入时只收 jpg/png/webp/avif/gif/bmp，长边压到 1920px（JPEG q.82）并存本机，另存 320px 缩略图；每张可**改名 / 删除 / 拖拽排序**，同一张重复导入会跳过，上限 200 张 / 500MB（manifest 加 `unlimitedStorage`）。随机范围（chips）新增「我的图片」，勾上后随机命中会走图片渲染路径、记住上一张不连续重复；`bg.pool` 为空仍表示「全部内置样式」，老行为不变。新文件 `pages/bg-library.js` | 新文件 `pages/bg-library.js`、`src/content/settings*`、`src/content/background*`、`src/shared/settings.ts` |
 | `af18f0c` | 随机池**逐项可控**：图库里每张卡片右上角新增「随机」开关（索引里存 `on` 字段），关掉的图片不会被抽到，卡片变暗、顶部计数显示「N 张 · 随机 M 张」，全关时「我的图片」chip 自动禁用；内置样式的逐个开关仍是「随机范围」的 chips，现在被排除的样式会同步**变暗**（`data-off`），一眼能看出谁在池里。随机顺序仍记住上一张，不连续重复 | `pages/bg-library.js`（图库卡片与 `randomIds`）、`src/content/settings*`（chips 与样式格） |
+| `22ec93b` | 动态页「回到顶部」按钮从**窗口右下角**移到**右侧栏（热搜）那一列的左边缘**：按钮仍是 fixed，但 `right` 改成按侧栏的 `getBoundingClientRect()` 算（左边缘 +17px、垂直仍距底 28px），窗口缩放时重算；`width<=1240px` 右侧栏隐藏时自动清掉内联值、退回原来的右下角 | `src/content/feed.ts`（`placeTop`）、`.fd-top` 样式 |
 
 > 一次性迁移的标记存在页面 `localStorage` 里（`margin:defaults-off-v2`），所以每个 b 站子域第一次加载都会跑一次，之后手动打开这些开关不会被覆盖。
