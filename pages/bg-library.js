@@ -51,11 +51,29 @@ const store = {
 
 export async function getIndex() {
   const list = await store.get(INDEX_KEY, []);
-  return Array.isArray(list) ? list.filter((e) => e && typeof e.id === 'string') : [];
+  if (!Array.isArray(list)) return [];
+  return list
+    .filter((e) => e && typeof e.id === 'string')
+    .map((e) => (e.on === false ? { ...e, on: false } : { ...e, on: true }));
 }
 
 export async function ids() {
   return (await getIndex()).map((e) => e.id);
+}
+
+/** 参与随机的那几张（每张卡片右上角可以单独关掉） */
+export async function randomIds() {
+  return (await getIndex()).filter((e) => e.on !== false).map((e) => e.id);
+}
+
+/** 开 / 关某张图的随机参与 */
+export async function setRandom(id, on) {
+  const index = await getIndex();
+  const hit = index.find((e) => e.id === id);
+  if (!hit) return null;
+  hit.on = !!on;
+  await store.set({ [INDEX_KEY]: index });
+  return hit.on;
 }
 
 export async function data(id) {
@@ -63,9 +81,9 @@ export async function data(id) {
   return await store.get(dataKey(id), '');
 }
 
-/** 从图库里随机取一张（可排除上一张），没有图时返回 null */
+/** 从图库里随机取一张（可排除上一张），只看参与随机的那几张 */
 export async function pickRandom(exclude = '') {
-  const list = await getIndex();
+  const list = (await getIndex()).filter((e) => e.on !== false);
   if (!list.length) return null;
   const pool = list.length > 1 && exclude ? list.filter((e) => e.id !== exclude) : list;
   const pick = pool[Math.floor(Math.random() * pool.length)];
@@ -320,6 +338,12 @@ const CSS = `
 .bglib-item[data-drag]{opacity:.45}
 .bglib-item[data-over]{box-shadow:0 0 0 2px var(--accent)}
 .bglib-thumb{display:block;width:100%;aspect-ratio:16/9;object-fit:cover;background:var(--chip)}
+.bglib-on{position:absolute;top:6px;right:6px;appearance:none;border:0;border-radius:999px;padding:3px 8px;font:500 10px/1 var(--sans);letter-spacing:.02em;cursor:pointer;color:var(--muted);background:color-mix(in srgb, var(--canvas) 78%, transparent);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+.bglib-on:hover{color:var(--ink)}
+.bglib-on[aria-pressed=true]{color:#fff;background:var(--accent)}
+.bglib-on[aria-pressed=false]{opacity:.9}
+.bglib-item[data-off] .bglib-thumb{opacity:.42}
+.bglib-item[data-off] .bglib-name{color:var(--faint)}
 .bglib-name{font:500 11px/1.3 var(--sans);color:var(--muted);padding:6px 8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .bglib-name input{width:100%;font:inherit;color:var(--ink);background:var(--canvas);border:1px solid var(--accent);border-radius:6px;padding:2px 4px;outline:none}
 .bglib-acts{display:flex;border-top:1px solid var(--line)}
@@ -378,7 +402,7 @@ export function mount(host, opts = {}) {
   drop.textContent = '也可以把图片或文件夹拖到这里';
   const note = document.createElement('p');
   note.className = 'bglib-note';
-  note.textContent = `只收 jpg / png / webp / avif / gif / bmp；长边压到 ${MAX_EDGE}px 后存在本机，最多 ${MAX_IMAGES} 张`;
+  note.textContent = `只收 jpg / png / webp / avif / gif / bmp；长边压到 ${MAX_EDGE}px 后存在本机，最多 ${MAX_IMAGES} 张。右上角「随机」控制这张要不要参与随机`;
 
   host.replaceChildren(bar, grid, drop, note, pick, pickDir);
 
@@ -392,7 +416,8 @@ export function mount(host, opts = {}) {
     // 正在就地改名时不要重绘，否则输入框会被替换掉
     const editing = grid.querySelector('.bglib-name input');
     if (editing && root.activeElement === editing) return index;
-    count.textContent = index.length ? `${index.length} 张` : '';
+    const onN = index.filter((e) => e.on !== false).length;
+    count.textContent = index.length ? `${index.length} 张${onN === index.length ? '' : ` · 随机 ${onN} 张`}` : '';
     addBtn.disabled = busy;
     folderBtn.disabled = busy;
     drop.hidden = index.length > 0 ? false : false;
@@ -412,6 +437,14 @@ export function mount(host, opts = {}) {
         name.className = 'bglib-name';
         name.textContent = it.name;
         name.title = `${it.name} · ${it.w}×${it.h}`;
+        const badge = document.createElement('button');
+        badge.type = 'button';
+        badge.className = 'bglib-on';
+        badge.dataset.act = 'toggle';
+        badge.setAttribute('aria-pressed', String(it.on !== false));
+        badge.title = it.on === false ? '加入随机' : '不参与随机';
+        badge.textContent = '随机';
+        fig.toggleAttribute('data-off', it.on === false);
         const acts = document.createElement('div');
         acts.className = 'bglib-acts';
         const mk = (label, act) => {
@@ -422,7 +455,7 @@ export function mount(host, opts = {}) {
           return b;
         };
         acts.append(mk('设为背景', 'use'), mk('改名', 'rename'), mk('删除', 'del'));
-        fig.append(img, name, acts);
+        fig.append(img, badge, name, acts);
         return fig;
       }),
     );
@@ -433,7 +466,7 @@ export function mount(host, opts = {}) {
       grid.replaceChildren();
       grid.append(empty);
     }
-    opts.onCount?.(index.length);
+    opts.onCount?.(index.length, index.filter((e) => e.on !== false).length);
     return index;
   };
 
@@ -544,6 +577,22 @@ export function mount(host, opts = {}) {
     const id = fig?.dataset.id;
     if (!id) return;
     const act = btn.dataset.act;
+    if (act === 'toggle') {
+      const it = index.find((x) => x.id === id);
+      const next = !(it ? it.on !== false : true);
+      const saved = await setRandom(id, next);
+      if (saved === null) return;
+      if (it) it.on = next;
+      fig.toggleAttribute('data-off', !next);
+      btn.setAttribute('aria-pressed', String(next));
+      btn.title = next ? '不参与随机' : '加入随机';
+      const total = index.length;
+      const onN = index.filter((x) => x.on !== false).length;
+      count.textContent = `${total} 张${onN === total ? '' : ` · 随机 ${onN} 张`}`;
+      opts.onCount?.(total, onN);
+      toast(next ? '已加入随机' : '已从随机里排除');
+      return;
+    }
     if (act === 'use') {
       if (await useImage(id)) {
         opts.patch?.({ bg: { ...(opts.get?.()?.bg ?? {}), mode: 'image' } });
