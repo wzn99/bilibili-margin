@@ -128,9 +128,13 @@ function rowEl(row, ago) {
     head.append(time);
   }
   if (row.like > 0) {
+    // 和卡片底部「赞」用同一个大拇指，而不是爱心
     const like = document.createElement('span');
     like.className = 'dy-cmt-like';
-    like.textContent = `♥ ${row.like}`;
+    like.title = `${row.like} 人赞过`;
+    const num = document.createElement('span');
+    num.textContent = String(row.like);
+    like.append(svg(ICONS.thumb), num);
     head.append(like);
   }
   body.append(head);
